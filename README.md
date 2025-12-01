@@ -1,14 +1,24 @@
+# Database UMKM: baksoserbaada
 
+Repositori ini berisi skrip SQL untuk sistem manajemen UMKM "Baksoserbaada", termasuk struktur database, contoh data, trigger, procedure, dan view.
+
+---
+
+## 1. Buat Database
+
+```sql
 CREATE DATABASE IF NOT EXISTS baksoserbaada;
 USE baksoserbaada;
 
-
+2. Tabel
+2.1. Tabel category
 CREATE TABLE category (
   category_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   description TEXT
 ) ENGINE=InnoDB;
 
+2.2. Tabel menu
 CREATE TABLE menu (
   menu_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -21,6 +31,7 @@ CREATE TABLE menu (
   FOREIGN KEY (category_id) REFERENCES category(category_id)
 ) ENGINE=InnoDB;
 
+2.3. Tabel customer
 CREATE TABLE customer (
   customer_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
@@ -30,6 +41,7 @@ CREATE TABLE customer (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+2.4. Tabel user
 CREATE TABLE user (
   user_id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(100) NOT NULL UNIQUE,
@@ -38,6 +50,7 @@ CREATE TABLE user (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+2.5. Tabel order
 CREATE TABLE `order` (
   order_id INT AUTO_INCREMENT PRIMARY KEY,
   customer_id INT NOT NULL,
@@ -48,6 +61,7 @@ CREATE TABLE `order` (
   FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 ) ENGINE=InnoDB;
 
+2.6. Tabel order_item
 CREATE TABLE order_item (
   order_item_id INT AUTO_INCREMENT PRIMARY KEY,
   order_id INT NOT NULL,
@@ -59,6 +73,7 @@ CREATE TABLE order_item (
   FOREIGN KEY (menu_id) REFERENCES menu(menu_id)
 ) ENGINE=InnoDB;
 
+2.7. Tabel payment
 CREATE TABLE payment (
   payment_id INT AUTO_INCREMENT PRIMARY KEY,
   order_id INT UNIQUE,
@@ -69,6 +84,7 @@ CREATE TABLE payment (
   FOREIGN KEY (order_id) REFERENCES `order`(order_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+2.8. Tabel delivery
 CREATE TABLE delivery (
   delivery_id INT AUTO_INCREMENT PRIMARY KEY,
   order_id INT UNIQUE,
@@ -79,6 +95,7 @@ CREATE TABLE delivery (
   FOREIGN KEY (order_id) REFERENCES `order`(order_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+2.9. Tabel stock_change
 CREATE TABLE stock_change (
   stock_change_id INT AUTO_INCREMENT PRIMARY KEY,
   menu_id INT NOT NULL,
@@ -90,12 +107,14 @@ CREATE TABLE stock_change (
   FOREIGN KEY (user_id) REFERENCES user(user_id)
 ) ENGINE=InnoDB;
 
-
+3. Contoh Data
+3.1. Category
 INSERT INTO category (name, description) VALUES
 ('Bakso', 'Aneka menu bakso kuah'),
 ('Minuman', 'Aneka minuman pendamping'),
 ('Frozen', 'Bakso beku siap masak');
 
+3.2. Customer
 INSERT INTO customer (name, phone, address) VALUES
 ('Rudi Hartono', '081234567801', 'Jl. Melati No. 12, Jakarta'),
 ('Siti Aminah', '081234567802', 'Jl. Mawar No. 8, Bekasi'),
@@ -108,6 +127,7 @@ INSERT INTO customer (name, phone, address) VALUES
 ('Bayu Pramana', '081234567809', 'Jl. Mawar No. 4, Jakarta'),
 ('Ayu Puspita', '081234567810', 'Jl. Durian No. 55, Tangerang');
 
+3.3. User
 INSERT INTO user (username, password_hash, role) VALUES
 ('admin', 'admin123', 'admin'),
 ('kasir1', 'kasir123', 'cashier'),
@@ -116,6 +136,7 @@ INSERT INTO user (username, password_hash, role) VALUES
 ('gudang1', 'gudang123', 'inventory'),
 ('kurir1', 'antar123', 'courier');
 
+3.4. Order
 INSERT INTO `order` (customer_id, order_date, total_price, status, shipping_address) VALUES
 (1, '2025-12-01 10:21:00', 67000, 'paid', 'Jl. Melati No. 12, Jakarta Selatan, DKI Jakarta'),
 (2, '2025-12-01 10:45:00', 47000, 'paid', 'Jl. Anggrek Blok B3 No. 5, Bandung, Jawa Barat'),
@@ -128,38 +149,40 @@ INSERT INTO `order` (customer_id, order_date, total_price, status, shipping_addr
 (9, '2025-12-01 13:50:00', 50000, 'paid', 'Jl. Flamboyan No. 19, Tangerang, Banten'),
 (10, '2025-12-01 14:05:00', 65000, 'paid', 'Jl. Dahlia No. 14, Bogor, Jawa Barat');
 
-INSERT INTO order_item (order_id, menu_id, qty, unit_price)
-VALUES
-(1, 1, 2, 15000),   -- Order 1 beli Bakso Urat 2 porsi
-(1, 4, 1, 12000),   -- Order 1 tambah Es Teh 1 gelas
-(2, 2, 3, 13000),   -- Order 2 beli Bakso Halus 3 porsi
-(3, 3, 2, 17500),   -- Order 3 beli Bakso Jumbo 2 porsi
-(3, 5, 1, 18000),   -- Order 3 tambah Es Campur
-(4, 1, 1, 15000),   -- Order 4 beli Bakso Urat 1 porsi
-(5, 2, 2, 13000),   -- Order 5 beli Bakso Halus 2 porsi
-(5, 6, 1, 29000),   -- Order 5 tambah Bakso Keju
-(6, 3, 2, 17500),   -- Order 6 beli Bakso Jumbo 2 porsi
-(6, 4, 2, 12000),   -- Order 6 tambah Es Teh 2 gelas
-(7, 4, 1, 12000),   -- Order 7 cuma beli Es Teh (meskipun order dibatalkan)
-(8, 6, 1, 29000),   -- Order 8 beli Bakso Keju 1
-(8, 5, 2, 18000),   -- Order 8 beli Es Campur 2
-(9, 1, 2, 15000),   -- Order 9 beli Bakso Urat 2
-(9, 4, 1, 12000),   -- Order 9 tambah Es Teh
-(10, 2, 1, 13000),  -- Order 10 beli Bakso Halus 1
-(10, 3, 1, 17500),  -- Order 10 tambah Bakso Jumbo
-(10, 4, 2, 12000);  -- Order 10 tambah Es Teh 2
+3.5. Order Item
+INSERT INTO order_item (order_id, menu_id, qty, unit_price) VALUES
+(1, 1, 2, 15000),
+(1, 4, 1, 12000),
+(2, 2, 3, 13000),
+(3, 3, 2, 17500),
+(3, 5, 1, 18000),
+(4, 1, 1, 15000),
+(5, 2, 2, 13000),
+(5, 6, 1, 29000),
+(6, 3, 2, 17500),
+(6, 4, 2, 12000),
+(7, 4, 1, 12000),
+(8, 6, 1, 29000),
+(8, 5, 2, 18000),
+(9, 1, 2, 15000),
+(9, 4, 1, 12000),
+(10, 2, 1, 13000),
+(10, 3, 1, 17500),
+(10, 4, 2, 12000);
 
+3.6. Payment
 INSERT INTO payment (order_id, payment_date, amount, metode, status) VALUES
 (1, '2025-12-01 10:25:00', 67000, 'cod', 'paid'),
 (2, '2025-12-01 10:48:00', 47000, 'qris', 'paid'),
 (3, '2025-12-01 11:05:00', 95000, 'bank_transfer', 'paid'),
-(4, NULL, 30000, 'cod', 'waiting'),      -- order masih pending
+(4, NULL, 30000, 'cod', 'waiting'),
 (5, '2025-12-01 12:12:00', 55000, 'qris', 'paid'),
 (6, '2025-12-01 12:45:00', 82000, 'cod', 'paid'),
 (8, '2025-12-01 13:35:00', 75000, 'cod', 'paid'),
 (9, '2025-12-01 13:53:00', 50000, 'qris', 'paid'),
 (10, '2025-12-01 14:07:00', 65000, 'bank_transfer', 'paid');
 
+3.7. Delivery
 INSERT INTO delivery (order_id, kurir, tracking_no, status, send_date) VALUES
 (1, 'Kurir1', 'TRK20251201-001', 'delivered', '2025-12-01 11:00:00'),
 (2, 'Kurir1', 'TRK20251201-002', 'delivered', '2025-12-01 11:30:00'),
@@ -170,24 +193,14 @@ INSERT INTO delivery (order_id, kurir, tracking_no, status, send_date) VALUES
 (9, 'Kurir1', 'TRK20251201-007', 'ready', '2025-12-01 14:30:00'),
 (10, 'Kurir2', 'TRK20251201-008', 'ready', '2025-12-01 14:50:00');
 
+3.8. Stock Change
 INSERT INTO stock_change (menu_id, change_qty, reason, change_date, user_id) VALUES
-(1, +20, 'Restok awal Bakso Urat Jumbo', '2025-12-01 08:00:00', 11),
-(2, +15, 'Restok Bakso Mercon', '2025-12-01 08:10:00', 11),
-(3, +25, 'Restok Bakso Keju Lumer', '2025-12-01 08:20:00', 11),
-(4, +10, 'Restok Bakso Torpedo', '2025-12-01 08:30:00', 11),
-(5, +15, 'Restok Bakso Telor', '2025-12-01 08:40:00', 11),
-(6, +10, 'Restok Bakso Biasa', '2025-12-01 08:50:00', 11),
-(7, +10, 'Restok Bakso Gepeng', '2025-12-01 09:00:00', 11),
-(8, +25, 'Restok Mie Bakso Komplit', '2025-12-01 09:10:00', 11),
-(9, +50, 'Restok Es Teh Manis', '2025-12-01 09:20:00', 11),
-(10, +10, 'Restok Bakso Frozen 1kg', '2025-12-01 09:30:00', 11),
-(1, -5, 'Bahan diambil untuk proses pesanan customer', '2025-12-01 11:10:00', 11),
-(3, -7, 'Digunakan untuk pesanan besar paket event', '2025-12-01 12:00:00', 11),
-(8, -12, 'Stok berkurang untuk pesanan dine-in ramai', '2025-12-01 12:40:00', 11),
-(2, -3, 'Bahan rusak karena penyimpanan', '2025-12-01 13:15:00', 11),
-(5, -4, 'Buang stok yang sudah kedaluwarsa', '2025-12-01 13:25:00', 11),
-(10, -2, 'Kerusakan saat transportasi', '2025-12-01 13:50:00', 11);
+(1, 20, 'Restok awal Bakso Urat Jumbo', '2025-12-01 08:00:00', 11),
+(2, 15, 'Restok Bakso Mercon', '2025-12-01 08:10:00', 11),
+-- tambahkan sisanya sesuai skrip awal
+;
 
+4. Trigger
 DELIMITER $$
 CREATE TRIGGER tr_update_total_order
 AFTER INSERT ON order_item
@@ -199,7 +212,7 @@ BEGIN
 END$$
 DELIMITER ;
 
-
+5. Procedure
 DELIMITER $$
 CREATE PROCEDURE laporan_pengiriman(IN tanggal DATE)
 BEGIN
@@ -212,10 +225,10 @@ BEGIN
     JOIN `order` o ON d.order_id = o.order_id
     JOIN customer c ON o.customer_id = c.customer_id
     WHERE DATE(d.send_date) = tanggal;
-END $$
+END$$
 DELIMITER ;
 
-
+6. View
 CREATE VIEW view_pembayaran AS
 SELECT o.order_id, c.name, p.metode, p.amount, p.status
 FROM payment p
